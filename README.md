@@ -1,5 +1,5 @@
 # Azure-Dual-Region-Deployment-Approach
-This shows my typically deployment utilizes two regions in Azure.
+This shows my typically deployment utilizes two regions in Azure.  This is shown for web applications, but can be adapted to other similar cases.  
 
 ## Overview
 ![alt tag](https://raw.githubusercontent.com/AdamPaternostro/Azure-Dual-Region-Deployment-Approach/master/Azure-Dual-Region-Diagram.png)
@@ -8,14 +8,17 @@ If you are deploying your code to Azure and need to ensure uptime even in the ev
 
 ### In the above diagram:
 - There is Traffic Manager that is global 
-- There are two Azure App Services that are deployed to two different regions.  Each one gets its own DNS name.  
-- There are five websites being hosted on this App Service plan (typically you would have just one for large apps).  Each of the websites gets their own DNS, so I would have 10 in total.
+- There are two Azure App Services that are deployed to two different regions.  
+  - Each one gets its own DNS name.  
+- There are five websites being hosted on this App Service plan (typically you would have just one for large apps).  
+  - Each of the websites gets their own DNS, so I would have 10 in total.
 - There is a DocumentDB that is global which has global replication with automatic failover.
+- Application Insights is common since we want to see the traffic for each website reguardless of the number of regions the website is deployed.
 - There is a local storage account in each region (local queues are created)
 
 ### How things work
 - North Central
-  - Web Traffic arrives at the Web App.  
+  - Web Traffic arrives at the Web App 
   - The Web App reads and writes to local DocumentDB
   - The Web App reads and writes to local Azure Storage
   - Any Blob that is written to locally needs its Container and Filename (complete "path") written to MyAppSyncQueue (e.g. { "container" : "myfiles", "filename" : "/path/myfile.txt"})
@@ -25,9 +28,9 @@ If you are deploying your code to Azure and need to ensure uptime even in the ev
   - A Web Job will then read queue MyAppSyncTo02 and write the blob or table data to MyAppStorage02 (South Central)
   
 - South Central
-  - Web Traffic arrives at the Web App.  
+  - Web Traffic arrives at the Web App
   - The Web App reads from local DocumentDB
-  - The Web App write to remote North Central DocumentDB
+  - The Web App writes to **remote** North Central DocumentDB
   - The Web App reads and writes to local Azure Storage
   - Any Blob that is written to locally needs its Container and Filename (complete "path") written to MyAppSyncQueue (e.g. { "container" : "myfiles", "filename" : "/path/myfile.txt"})
   - Any Azure Table that is written to locally needs its Table Name, Partition Key and Row Key written to MyAppSyncQueue. (e.g. { "table" : "mytable", "partitionkey" : "mypartitionkey", "rowkey" : "myrowkey" } 
@@ -35,7 +38,20 @@ If you are deploying your code to Azure and need to ensure uptime even in the ev
     - This will then save to a local queue named MyAppSyncTo01 (and possibly MyAppSyncTo03, MyAppSyncTo04, etc...)
   - A Web Job will then read queue MyAppSyncTo01 and write the blob or table data to MyAppStorage01 (North Central)
 
-
+- Deployment
+  - Your deployment should be **exactly** the same to each region.  
+  - Here are my application variables
+    - Environment [Where am I deployed]
+      - In North Central this is set to: "01"
+      - In South Central this is set to: "02"
+     - DocumentDBPreferredLocations [How DocumentDB handles failover]
+      - In North Central this is set to: "NorthCentral, SouthCentral" (I split the list and add to my DocumentDB: PreferredLocations)
+      - In South Central this is set to: "SouthCentral, NorthCentral" (I split the list and add to my DocumentDB: PreferredLocations)
+      - See: https://docs.microsoft.com/en-us/azure/documentdb/documentdb-regional-failovers
+     - SyncRegions
+      - In All Regions: "01,02" - This tells me who I need to sync with (I will remove myself from the list).  So, region 01 will sync with 02 (and 03 if we had one).
+      
+        
 ### Naming
 - App Service Plan: I name these MyAppAppServicePlan01 and MyAppAppServicePlan02
 - Web Apps: I name these MyAppWeb01, MyAppWeb02
@@ -55,6 +71,8 @@ If you are deploying your code to Azure and need to ensure uptime even in the ev
 
 ### Heathchecks
 - You should have a healthcheck URL in your Web App that reads/writes a test file to Azure Storage and reads/write to DocumentDB
+- Traffic Manager will be calling the healthcheck
+- Application Insights will be calling the healthcheck
 
 ### Failures: There are couple scenerios that can occur
 - Traffic Manager might get a failure of a healthcheck.  If this happens then Traffic Manager stops sending traffic to that region.

@@ -23,8 +23,7 @@ This shows my typically deployment utilizes two regions in Azure.  If you are de
   - Any Azure Table that is written to locally needs its Table Name, Partition Key and Row Key written to MyAppSyncQueue. (e.g. { "table" : "mytable", "partitionkey" : "mypartitionkey", "rowkey" : "myrowkey" } 
   - A web Job will then need to read the queue MyAppSyncQueue
     - This will then save to a local queue named MyAppSyncTo02 (and possibly MyAppSyncTo03, MyAppSyncTo04, etc...)
-  - A Web Job will then read queue MyAppSyncTo02 and write the blob or table data to MyAppStorage02 (South Central)
-  - South Central
+  - A Web Job will then read queue MyAppSyncTo02 and write the blob or table data to MyAppStorage02 (South Central)  - South Central
   - Web Traffic arrives at the Web App
   - The Web App reads from local DocumentDB
   - The Web App writes to **remote** North Central DocumentDB
@@ -81,7 +80,9 @@ This shows my typically deployment utilizes two regions in Azure.  If you are de
 - If Azure Web Apps stop working (Azure issue), then Traffic Manager will route all traffic to the other region due to your healthcheck.  But your DocumentDB might not be down in the North Central region.  So, DocumentDB does not failover, but your traffic has been re-routed.  So, do not think a failure means every service in the region has an issue.  It just might be one tier and the other up region can still be syncing files and accessing DocumentDB.
 
 ### Recovery
-- Once the incident if over, your DocumentDB will correct itself. You storage should sync and you should be in a consistent state.
+- Once the incident if over
+  - Your storage should sync and you should be in a consistent state.
+  - You will need to address any DocumentDB issues per this [link](https://docs.microsoft.com/en-us/azure/documentdb/documentdb-regional-failovers).
 
 ### Terms
 - Region: A group of Azure data centers 

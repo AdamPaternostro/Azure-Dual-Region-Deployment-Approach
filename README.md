@@ -31,8 +31,7 @@ This shows my typically deployment utilizes two regions in Azure.  If you are de
   - The Web App writes to **remote** North Central DocumentDB
   - The Web App reads and writes to local Azure Storage
   - Any Blob that is written to locally needs its Container and Filename (complete "path") written to MyAppSyncQueue (e.g. { "container" : "myfiles", "filename" : "/path/myfile.txt"})
-  - Any Azure Table that is written to locally needs its Table Name, Partition Key and Row Key written to MyAppSyncQueue. (e.g. { "table" : "mytable", "partitionkey" : "mypartitionkey", "rowkey" : "myrowkey" } 
-  - A web Job will then need to read the queue MyAppSyncQueue
+  - Any Azure Table that is written to locally needs its Table Name, Partition Key and Row Key written to MyAppSyncQueue. (e.g. { "table" : "mytable", "partitionkey" : "mypartitionkey", "rowkey" : "myrowkey" }   - A web Job will then need to read the queue MyAppSyncQueue
     - This will then save to a local queue named MyAppSyncTo01 (and possibly MyAppSyncTo03, MyAppSyncTo04, etc...)
   - A Web Job will then read queue MyAppSyncTo01 and write the blob or table data to MyAppStorage01 (North Central)
 
@@ -59,7 +58,7 @@ This shows my typically deployment utilizes two regions in Azure.  If you are de
 - Storage Queues: I name these MyAppSyncQueue, MyAppSyncQueue
 - Storage Queues: MyAppSyncTo02 (located in MyAppStorage01) and MyAppSyncTo02 (located in MyAppStorage01)
 - DocumentDB: This is global so I name MyAppDocumentDB (no number on the end)
-- Traffic Maanger: This global so I name MyAppTrafficManager (no number on the end)
+- Traffic Manger: This global so I name MyAppTrafficManager (no number on the end)
 - Resouce Groups: I will create 3 resource groups in the above scenerio
   - MyAppCommon: For DocumentDB, Traffic Manager and Application Insights
   - MyApp01: For everything that ends in 01.  All the resources in this group would be in the same region.
@@ -75,7 +74,7 @@ This shows my typically deployment utilizes two regions in Azure.  If you are de
 ### Heathchecks
 - You should have a healthcheck URL in your Web App that reads/writes a test file to Azure Storage and reads/write to DocumentDB
 - Traffic Manager will be calling the healthcheck.  Traffic manager needs this to know when to stop routing traffic to a region.  You can also have a healthcheck URL that returns a bad health status.  This will allow you to change the URL in traffic manager to simulate a failure during development.  
-- Application Insights will be calling the healthcheck.  Applications Insights shoudl be part of your overall monitoring, so IT is alerted along with the developers.
+- Application Insights will be calling the healthcheck.  Applications Insights should be part of your overall monitoring, so IT is alerted along with the developers.
 
 ### Failures: There are couple scenerios that can occur
 - Traffic Manager might get a failure of a healthcheck.  If this happens then Traffic Manager stops sending traffic to that region.  Your web apps should auto-scale to handle the traffic in the region.

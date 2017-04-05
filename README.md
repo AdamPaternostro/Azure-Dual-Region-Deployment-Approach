@@ -15,7 +15,7 @@ This shows my typically deployment utilizes two regions in Azure.  If you are de
 - Azure Storage: There is a local storage account in each region (local queues are created)
 
 ### How things work
-- North Central
+#### North Central
   - Web Traffic arrives at the Web App 
   - The Web App reads and writes to local DocumentDB
   - The Web App reads and writes to local Azure Storage
@@ -23,7 +23,9 @@ This shows my typically deployment utilizes two regions in Azure.  If you are de
   - Any Azure Table that is written to locally needs its Table Name, Partition Key and Row Key written to MyAppSyncQueue. (e.g. { "table" : "mytable", "partitionkey" : "mypartitionkey", "rowkey" : "myrowkey" } 
   - A web Job will then need to read the queue MyAppSyncQueue
     - This will then save to a local queue named MyAppSyncTo02 (and possibly MyAppSyncTo03, MyAppSyncTo04, etc...)
-  - A Web Job will then read queue MyAppSyncTo02 and write the blob or table data to MyAppStorage02 (South Central)  - South Central
+  - A Web Job will then read queue MyAppSyncTo02 and write the blob or table data to MyAppStorage02 (South Central)  
+  
+#### South Central
   - Web Traffic arrives at the Web App
   - The Web App reads from local DocumentDB
   - The Web App writes to **remote** North Central DocumentDB
@@ -34,18 +36,18 @@ This shows my typically deployment utilizes two regions in Azure.  If you are de
     - This will then save to a local queue named MyAppSyncTo01 (and possibly MyAppSyncTo03, MyAppSyncTo04, etc...)
   - A Web Job will then read queue MyAppSyncTo01 and write the blob or table data to MyAppStorage01 (North Central)
 
-- Deployment
+### Deployment
   - Your deployment should be **exactly** the same to each region.  
   - Here are my application variables
     - Environment [This tells the application "where they are deployed"]
       - In North Central this is set to: "01"
       - In South Central this is set to: "02"
      - DocumentDBPreferredLocations [This tells the application "where you should read for DocDB" - you configure the primary write in the Azure Portal]
-      - In North Central this is set to: "NorthCentral, SouthCentral" (I split the list and add to my DocumentDB: PreferredLocations)
-      - In South Central this is set to: "SouthCentral, NorthCentral" (I split the list and add to my DocumentDB: PreferredLocations)
+        - In North Central this is set to: "NorthCentral, SouthCentral" (I split the list and add to my DocumentDB: PreferredLocations)
+        - In South Central this is set to: "SouthCentral, NorthCentral" (I split the list and add to my DocumentDB: PreferredLocations)
       - See: https://docs.microsoft.com/en-us/azure/documentdb/documentdb-regional-failovers
-     - SyncRegions
-      - In All Regions: "01,02" - This tells me who I need to sync with (I will remove myself from the list).  So, region 01 will sync with 02 (and 03 if we had one).
+     - SyncRegions [This tells the application about all the regions you have deployed]
+        - In All Regions: "01,02" - This tells me who I need to sync with (I will remove myself from the list).  So, region 01 will sync with 02 (and 03 if we had one).
      - You will have each storage account connection in all your deployments since the web job needs to sync accross regions.  By using 01, 02, etc... your code can be smart and know who it is and who is remote.
       
         
@@ -81,7 +83,7 @@ This shows my typically deployment utilizes two regions in Azure.  If you are de
 
 ### Recovery
 - Once the incident if over
-  - Your storage should sync and you should be in a consistent state.
+  - Your storage should sync and you should be in a consistent state.  The queure / sync job should handle this.
   - You will need to address any DocumentDB issues per this [link](https://docs.microsoft.com/en-us/azure/documentdb/documentdb-regional-failovers).
 
 ### Terms

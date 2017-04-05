@@ -1,17 +1,17 @@
 # Azure-Dual-Region-Deployment-Approach
-This shows my typically deployment utilizes two regions in Azure.  If you are deploying your code to Azure and need to ensure uptime even in the event of a regional issue, then you need to consider deploying your system to two regions. You should review which Azure Regions are paired for best performance.  The below architecture is shown for web applications, but can be adapted to other similar architectures.  I perfer an active-active apporach versus a failover / disaster recovery.  I do not want to spend the time creating a DR plan and I almost never test them.  With active-active, ideally you can split your application workload accross two regions, so your cost remains close to a single region deployment.  
+This shows my typically deployment utilizes two regions in Azure.  If you are deploying your code to Azure and need to ensure uptime even in the event of a regional issue, then you need to consider deploying your system to two regions. You should review which Azure Regions are paired for best performance.  The below architecture is shown for web applications, but can be adapted to other similar architectures.  I prefer an active-active approach versus a failover / disaster recovery.  I do not want to spend the time creating a DR plan and I almost never test them.  With active-active, ideally you can split your application workload across two regions, so your cost remains close to a single region deployment.  
 
 ## Overview
 ![alt tag](https://raw.githubusercontent.com/AdamPaternostro/Azure-Dual-Region-Deployment-Approach/master/Azure-Dual-Region-Diagram.png)
 
 ### In the above diagram:
-- Traffic Manager: Global DNS that will route my traffic two either site.  This handles when a region experiences issues.
+- Traffic Manager: Global DNS that will route my traffic two either site.  This will handle when a region experiences issues.
 - Azure App Services: Two services each in a different region.  
   - Each one gets its own DNS name.  
 - Web Apps: This shows 5 websites being hosted on this App Service plan (you might just have 1 or 2 - frontend and REST tier).  
   - Each of the websites gets their own DNS, the above would have 10 in total.
 - DocumentDB: A single DocumentDB that is globally replicated.
-- Application Insights: An Application Insight per website. Only one per site since you want to see the traffic for each website reguardless of the number of regions the website is deployed.
+- Application Insights: An Application Insight per website. Only one per site since you want to see the traffic for each website regardless of the number of regions the website is deployed.
 - Azure Storage: There is a local storage account in each region (local queues are created)
 
 ### How things work
@@ -59,7 +59,7 @@ This shows my typically deployment utilizes two regions in Azure.  If you are de
 - Storage Queues: MyAppSyncTo02 (located in MyAppStorage01) and MyAppSyncTo02 (located in MyAppStorage01)
 - DocumentDB: This is global so I name MyAppDocumentDB (no number on the end)
 - Traffic Manger: This global so I name MyAppTrafficManager (no number on the end)
-- Resouce Groups: I will create 3 resource groups in the above scenerio
+- Resource Groups: I will create 3 resource groups in the above scenerio
   - MyAppCommon: For DocumentDB, Traffic Manager and Application Insights
   - MyApp01: For everything that ends in 01.  All the resources in this group would be in the same region.
   - MyApp02: For everything that ends in 02.  All the resources in this group would be in the same region.
@@ -76,15 +76,16 @@ This shows my typically deployment utilizes two regions in Azure.  If you are de
 - Traffic Manager will be calling the healthcheck.  Traffic manager needs this to know when to stop routing traffic to a region.  You can also have a healthcheck URL that returns a bad health status.  This will allow you to change the URL in traffic manager to simulate a failure during development.  
 - Application Insights will be calling the healthcheck.  Applications Insights should be part of your overall monitoring, so IT is alerted along with the developers.
 
-### Failures: There are couple scenerios that can occur
+### Failures: There are couple scenarios that can occur
 - Traffic Manager might get a failure of a healthcheck.  If this happens then Traffic Manager stops sending traffic to that region.  Your web apps should auto-scale to handle the traffic in the region.
 - If Azure Web Apps stop working (Azure issue), then Traffic Manager will route all traffic to the other region due to your healthcheck.  But your DocumentDB might not be down in the North Central region.  So, DocumentDB does not failover, but your traffic has been re-routed.  So, do not think a failure means every service in the region has an issue.  It just might be one tier and the other up region can still be syncing files and accessing DocumentDB.
 
 ### Recovery
 - Once the incident if over
-  - Your storage should sync and you should be in a consistent state.  The queure / sync job should handle this.
+  - Your storage should sync and you should be in a consistent state.  The queue / sync job should handle this.
   - You will need to address any DocumentDB issues per this [link](https://docs.microsoft.com/en-us/azure/documentdb/documentdb-regional-failovers).
 
 ### Terms
 - Region: A group of Azure data centers 
 - Traffic Manager: A global DNS system that routes traffic
+

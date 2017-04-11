@@ -71,9 +71,9 @@ This shows my typically deployment utilizes two regions in Azure.  If you are de
   - Two they must support geo-replication.  
   - This makes my architecture easier and less I have to configure / maintain.
 
-### Heathchecks
-- You should have a healthcheck URL in your Web App that reads/writes a test file to Azure Storage and reads/write to DocumentDB
-- Traffic Manager will be calling the healthcheck.  Traffic manager needs this to know when to stop routing traffic to a region.  You can also have a healthcheck URL that returns a bad health status.  This will allow you to change the URL in traffic manager to simulate a failure during development.  
+### Health checks
+- You should have a health check URL in your Web App that reads/writes a test file to Azure Storage and reads/write to DocumentDB
+- Traffic Manager will be calling the health check.  Traffic manager needs this to know when to stop routing traffic to a region.  You can also have a healthcheck URL that returns a bad health status.  This will allow you to change the URL in traffic manager to simulate a failure during development.  
 - Application Insights will be calling the healthcheck.  Applications Insights should be part of your overall monitoring, so IT is alerted along with the developers.
 
 ### Failures: There are couple scenarios that can occur

@@ -1,3 +1,6 @@
+### Update May-2018
+You can now have multi-master support with CosmosDB!  Please see: https://docs.microsoft.com/en-us/azure/cosmos-db/multi-region-writers.  The below article still applies, multi-master will just make your life easier.
+
 # Azure-Dual-Region-Deployment-Approach
 This shows my typically deployment utilizes two regions in Azure.  If you are deploying your code to Azure and need to ensure uptime even in the event of a regional issue, then you need to consider deploying your system to two regions. You should review which Azure Regions are paired for best performance.  The below architecture is shown for web applications, but can be adapted to other similar architectures.  I prefer an active-active approach versus a failover / disaster recovery.  I do not want to spend the time creating a DR plan and I almost never test them.  With active-active, ideally you can split your application workload across two regions, so your cost remains close to a single region deployment.  
 
